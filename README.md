@@ -73,6 +73,18 @@ After the package is installed:
 
 The pinned taskbar icon is the single MVP entry point for launching your configured groups.
 
+## Verifying a build
+
+Automated checks run anywhere:
+
+```powershell
+dotnet build .\GroupsOnTaskbar.sln -c Release
+dotnet test .\GroupsOnTaskbar.sln -c Release --no-build
+```
+
+Interactive checks that need Developer Mode and an installed package are listed
+in [docs/manual-acceptance.md](docs/manual-acceptance.md).
+
 ## Configuration and logs
 
 When installed as a packaged app, Taskbar Groups stores local data under:
