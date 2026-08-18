@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GroupsOnTaskbar.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "GroupsOnTaskbar.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
