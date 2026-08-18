@@ -53,6 +53,12 @@ public sealed class LauncherWindowController
         ShowAdjacentToTaskbar();
     }
 
+    public void Hide()
+    {
+        _appWindow.Hide();
+        _isVisible = false;
+    }
+
     private void ConfigureWindow()
     {
         _window.ExtendsContentIntoTitleBar = false;
@@ -109,12 +115,6 @@ public sealed class LauncherWindowController
         _isVisible = true;
     }
 
-    private void Hide()
-    {
-        _appWindow.Hide();
-        _isVisible = false;
-    }
-
     private void OnWindowActivated(object sender, WindowActivatedEventArgs args)
     {
         if (args.WindowActivationState == WindowActivationState.Deactivated && !SuppressDeactivationHide)
@@ -141,16 +141,7 @@ public sealed class LauncherWindowController
 
     private void OnSettingsRequested(object? sender, EventArgs e)
     {
-        SuppressDeactivationHide = true;
-
-        try
-        {
-            _settingsRequestHandler?.Invoke();
-        }
-        finally
-        {
-            SuppressDeactivationHide = false;
-        }
+        _settingsRequestHandler?.Invoke();
     }
 
     private static void OnExitRequested(object? sender, EventArgs e)
