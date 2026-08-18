@@ -9,15 +9,16 @@
   IgnorableNamespaces="uap rescap systemai">
 
   <Identity
-    Name="1A941E66-227B-4EC7-8A24-438949638C91"
-    Publisher="CN=AppPublisher"
-    Version="1.0.0.0" />
+    Name="GroupsOnTaskbar.TaskbarGroups"
+    Publisher="CN=Taskbar Groups Development"
+    Version="0.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="1A941E66-227B-4EC7-8A24-438949638C91" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>GroupsOnTaskbar.App</DisplayName>
-    <PublisherDisplayName>AppPublisher</PublisherDisplayName>
+    <DisplayName>Taskbar Groups</DisplayName>
+    <PublisherDisplayName>Taskbar Groups</PublisherDisplayName>
+    <Description>Open grouped application shortcuts from the Windows taskbar</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -35,8 +36,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="GroupsOnTaskbar.App"
-        Description="GroupsOnTaskbar.App"
+        DisplayName="Taskbar Groups"
+        Description="Open grouped application shortcuts from the Windows taskbar"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
