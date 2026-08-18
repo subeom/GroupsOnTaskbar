@@ -11,6 +11,8 @@ public static class ActivationCoordinator
     public static bool RedirectToMainInstance()
     {
         var currentInstance = AppInstance.GetCurrent();
+
+        // Activation arguments must be captured before registering the key.
         var activatedEventArgs = currentInstance.GetActivatedEventArgs();
         var mainInstance = AppInstance.FindOrRegisterForKey(MainInstanceKey);
 
@@ -19,7 +21,23 @@ public static class ActivationCoordinator
             return false;
         }
 
-        mainInstance.RedirectActivationToAsync(activatedEventArgs).AsTask().GetAwaiter().GetResult();
+        // Redirecting with null activation arguments fails inside combase with
+        // E_POINTER (0x80004003), so guard before calling into it.
+        if (activatedEventArgs is null)
+        {
+            return true;
+        }
+
+        try
+        {
+            mainInstance.RedirectActivationToAsync(activatedEventArgs).AsTask().GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            // The registered instance may exit between lookup and redirect. Exiting
+            // quietly keeps single-instance behavior instead of crashing.
+        }
+
         return true;
     }
 

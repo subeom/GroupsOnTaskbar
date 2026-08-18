@@ -75,22 +75,27 @@ The pinned taskbar icon is the single MVP entry point for launching your configu
 
 ## Known issues
 
-The MVP installs, launches, saves settings, and survives being hidden, but two
-problems remain open:
+The MVP installs, saves settings correctly, and passes its full unit-test suite,
+but three problems remain open:
 
+- **Startup is unreliable.** The packaged app sometimes launches and shows the
+  flyout, and sometimes exits immediately with `0x80004003` (`E_POINTER`) raised
+  inside `combase.dll`. The failure reproduces on the committed code as well as
+  on several attempted fixes, so it is not caused by any single recent change.
+  `ActivationCoordinator.RedirectToMainInstance` now guards against null
+  activation arguments and swallows redirect failures, which removes one crash
+  path but does not fully resolve the intermittent exit.
 - **Group and shortcut lists do not render their items.** Groups are created,
   selected, and written to `settings-v1.json` correctly, and the Add app button
-  enables as expected, but neither `ListView` draws its rows. The bindings were
-  moved from `x:Bind` to code-behind `ItemsSource` assignment in the `Loaded`
-  handler; that did not resolve it, so the cause is still unknown.
-- **The launcher can be hard to bring back on screen.** The flyout correctly
-  hides when it loses focus, but repeated taskbar activations do not always
-  re-show it. Reworking the first-launch path caused a `0x80004003` crash in
-  `combase.dll`, so that change was reverted; the toggle path needs a different
-  fix.
+  enables as expected, but neither `ListView` draws its rows. Moving the
+  bindings from `x:Bind` to code-behind `ItemsSource` assignment in the `Loaded`
+  handler did not resolve it.
+- **The launcher can be hard to bring back on screen.** Hiding on focus loss is
+  intended, but repeated taskbar activations do not always re-show the window.
 
-Both issues are visual/interaction only. Configuration validation, persistence,
-recovery, placement math, and launching are covered by 70 passing unit tests.
+Configuration validation, persistence, corruption recovery, placement math, and
+launch classification are covered by 70 passing unit tests and are unaffected by
+the issues above.
 
 ## Verifying a build
 
