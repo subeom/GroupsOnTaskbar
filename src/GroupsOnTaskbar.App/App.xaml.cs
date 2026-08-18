@@ -28,6 +28,10 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+
+        // The launcher hides its only window between activations, so the app must
+        // not shut down when the last window disappears.
+        DispatcherShutdownMode = DispatcherShutdownMode.OnExplicitShutdown;
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
