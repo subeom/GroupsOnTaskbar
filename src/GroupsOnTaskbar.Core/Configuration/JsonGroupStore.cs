@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using GroupsOnTaskbar.Core.Models;
 using GroupsOnTaskbar.Core.Validation;
 
@@ -7,11 +8,8 @@ namespace GroupsOnTaskbar.Core.Configuration;
 
 public sealed class JsonGroupStore : IGroupStore
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
+    private static readonly JsonTypeInfo<LauncherConfiguration> LauncherConfigurationTypeInfo =
+        LauncherConfigurationJsonContext.Default.LauncherConfiguration;
 
     private readonly string _rootPath;
     private readonly string _settingsPath;
@@ -45,9 +43,9 @@ public sealed class JsonGroupStore : IGroupStore
                 bufferSize: 4096,
                 FileOptions.Asynchronous | FileOptions.SequentialScan);
 
-            var configuration = await JsonSerializer.DeserializeAsync<LauncherConfiguration>(
+            var configuration = await JsonSerializer.DeserializeAsync(
                 stream,
-                SerializerOptions,
+                LauncherConfigurationTypeInfo,
                 cancellationToken);
 
             if (configuration is null)
@@ -107,7 +105,11 @@ public sealed class JsonGroupStore : IGroupStore
                 bufferSize: 4096,
                 FileOptions.Asynchronous | FileOptions.WriteThrough))
             {
-                await JsonSerializer.SerializeAsync(stream, configuration, SerializerOptions, cancellationToken);
+                await JsonSerializer.SerializeAsync(
+                    stream,
+                    configuration,
+                    LauncherConfigurationTypeInfo,
+                    cancellationToken);
                 await stream.FlushAsync(cancellationToken);
                 stream.Flush(flushToDisk: true);
             }
