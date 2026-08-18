@@ -6,9 +6,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:GroupsOnTaskbar_App"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:GroupsOnTaskbar.App.ViewModels"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
-        <MicaBackdrop />
+        <MicaBackdrop Kind="BaseAlt" />
     </Window.SystemBackdrop>
 
     <ContentControl
@@ -16,6 +17,7 @@
         HorizontalContentAlignment="Stretch"
         VerticalContentAlignment="Stretch"
         AutomationProperties.AutomationId="LauncherRootHost"
+        AutomationProperties.Name="Taskbar Groups launcher"
         IsTabStop="True">
         <ContentControl.KeyboardAccelerators>
             <KeyboardAccelerator
@@ -23,6 +25,206 @@
                 Key="Escape" />
         </ContentControl.KeyboardAccelerators>
 
-        <local:MainPage />
+        <Grid Padding="16">
+            <Border
+                Padding="16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <InfoBar
+                        x:Name="StatusInfoBar"
+                        Grid.Row="0"
+                        IsClosable="False"
+                        IsOpen="False"
+                        Severity="Informational"
+                        AutomationProperties.AutomationId="LauncherStatusInfoBar"
+                        AutomationProperties.Name="Launcher status" />
+
+                    <ListView
+                        x:Name="GroupListView"
+                        Grid.Row="1"
+                        Margin="0,0,0,4"
+                        AutomationProperties.AutomationId="GroupSelector"
+                        AutomationProperties.Name="Application groups"
+                        ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                        ScrollViewer.HorizontalScrollMode="Enabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollMode="Disabled"
+                        SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsStackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Margin" Value="0,0,8,0" />
+                                <Setter Property="MinWidth" Value="112" />
+                                <Setter Property="Padding" Value="0" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:GroupViewModel">
+                                <Border
+                                    Padding="12,8"
+                                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    AutomationProperties.Name="{x:Bind Name}"
+                                    AutomationProperties.HelpText="Application group">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind Name}" />
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Grid Grid.Row="2">
+                        <GridView
+                            x:Name="ShortcutGridView"
+                            Margin="-4"
+                            AutomationProperties.AutomationId="ShortcutGrid"
+                            AutomationProperties.Name="Applications in the selected group"
+                            IsItemClickEnabled="True"
+                            ItemClick="OnShortcutGridViewItemClick"
+                            ItemsSource="{x:Bind ViewModel.VisibleShortcuts, Mode=OneWay}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectionMode="None"
+                            Visibility="{x:Bind local:MainWindow.BoolToVisibility(ViewModel.HasShortcuts), Mode=OneWay}">
+                            <GridView.ItemContainerStyle>
+                                <Style TargetType="GridViewItem">
+                                    <Setter Property="Margin" Value="4" />
+                                    <Setter Property="Padding" Value="0" />
+                                </Style>
+                            </GridView.ItemContainerStyle>
+                            <GridView.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:ShortcutViewModel">
+                                    <Border
+                                        Width="132"
+                                        Padding="12"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Opacity="{x:Bind TileOpacity, Mode=OneWay}"
+                                        AutomationProperties.Name="{x:Bind DisplayName}"
+                                        AutomationProperties.HelpText="{x:Bind TargetPath}">
+                                        <StackPanel HorizontalAlignment="Center" Spacing="8">
+                                            <Grid Width="48" Height="48">
+                                                <Image
+                                                    Width="48"
+                                                    Height="48"
+                                                    Source="{x:Bind Icon, Mode=OneWay}"
+                                                    Stretch="Uniform" />
+                                                <SymbolIcon
+                                                    Width="48"
+                                                    Height="48"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Symbol="OpenFile"
+                                                    Visibility="{x:Bind IconFallbackVisibility, Mode=OneWay}" />
+                                            </Grid>
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                MaxLines="2"
+                                                Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                Text="{x:Bind DisplayName}"
+                                                TextAlignment="Center"
+                                                TextWrapping="WrapWholeWords" />
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind AvailabilityText}"
+                                                TextAlignment="Center"
+                                                TextWrapping="WrapWholeWords"
+                                                Visibility="{x:Bind local:MainWindow.StringToVisibility(AvailabilityText), Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </GridView.ItemTemplate>
+                        </GridView>
+
+                        <Border
+                            Padding="24"
+                            Background="{ThemeResource LayerFillColorAltBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="{x:Bind local:MainWindow.BoolToVisibility(ViewModel.HasNoShortcuts), Mode=OneWay}">
+                            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                                <SymbolIcon
+                                    HorizontalAlignment="Center"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Symbol="OpenFile" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                                    Text="No apps in this group"
+                                    TextAlignment="Center" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    MaxWidth="260"
+                                    Style="{ThemeResource BodyTextBlockStyle}"
+                                    Text="Select another group or add shortcuts in Settings once editing is available."
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="3" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="SettingsButton"
+                            Grid.Column="1"
+                            AutomationProperties.AutomationId="SettingsButton"
+                            AutomationProperties.Name="Open settings"
+                            Click="OnSettingsButtonClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <SymbolIcon Symbol="Setting" />
+                                <TextBlock Text="Settings" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button
+                            x:Name="ExitButton"
+                            Grid.Column="2"
+                            AutomationProperties.AutomationId="ExitButton"
+                            AutomationProperties.Name="Exit launcher"
+                            Click="OnExitButtonClick"
+                            Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <SymbolIcon Symbol="Cancel" />
+                                <TextBlock Text="Exit" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </ContentControl>
 </Window>

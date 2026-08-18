@@ -1,4 +1,5 @@
 using GroupsOnTaskbar.App.Interop;
+using GroupsOnTaskbar.Core.Launch;
 using GroupsOnTaskbar.Core.Placement;
 using GroupsOnTaskbar_App;
 using Microsoft.UI.Windowing;
@@ -12,21 +13,28 @@ namespace GroupsOnTaskbar.App.Windows;
 
 public sealed class LauncherWindowController
 {
-    private const int LogicalWindowWidth = 440;
-    private const int LogicalWindowHeight = 360;
+    private const int LogicalWindowWidth = 560;
+    private const int LogicalWindowHeight = 460;
     private const int LauncherGap = 8;
 
     private readonly MainWindow _window;
     private readonly AppWindow _appWindow;
     private readonly ContentControl _rootHost;
+    private readonly IAppLaunchService _appLaunchService;
+    private readonly Action? _settingsRequestHandler;
 
     private bool _isVisible;
 
-    public LauncherWindowController(MainWindow window)
+    public LauncherWindowController(
+        MainWindow window,
+        IAppLaunchService appLaunchService,
+        Action? settingsRequestHandler = null)
     {
         _window = window;
         _appWindow = window.AppWindow;
         _rootHost = window.RootHost;
+        _appLaunchService = appLaunchService;
+        _settingsRequestHandler = settingsRequestHandler;
 
         ConfigureWindow();
         HookEvents();
@@ -69,6 +77,9 @@ public sealed class LauncherWindowController
     private void HookEvents()
     {
         _window.Activated += OnWindowActivated;
+        _window.ShortcutInvoked += OnShortcutInvoked;
+        _window.SettingsRequested += OnSettingsRequested;
+        _window.ExitRequested += OnExitRequested;
         _rootHost.KeyDown += OnRootHostKeyDown;
         _window.EscapeKeyboardAccelerator.Invoked += OnEscapeKeyboardAcceleratorInvoked;
     }
@@ -112,6 +123,41 @@ public sealed class LauncherWindowController
         }
     }
 
+    private void OnShortcutInvoked(object? sender, ShortcutInvokedEventArgs e)
+    {
+        var result = _appLaunchService.Launch(e.Shortcut.TargetPath);
+        if (result.Status == LaunchStatus.Started)
+        {
+            _window.ClearStatus();
+            Hide();
+            return;
+        }
+
+        _window.ShowStatus(
+            "Launch failed",
+            result.UserMessage ?? "Windows could not start this shortcut.",
+            MapSeverity(result.Status));
+    }
+
+    private void OnSettingsRequested(object? sender, EventArgs e)
+    {
+        SuppressDeactivationHide = true;
+
+        try
+        {
+            _settingsRequestHandler?.Invoke();
+        }
+        finally
+        {
+            SuppressDeactivationHide = false;
+        }
+    }
+
+    private static void OnExitRequested(object? sender, EventArgs e)
+    {
+        Application.Current.Exit();
+    }
+
     private void OnRootHostKeyDown(object sender, KeyRoutedEventArgs args)
     {
         if (args.Key != VirtualKey.Escape)
@@ -128,6 +174,9 @@ public sealed class LauncherWindowController
         Hide();
         args.Handled = true;
     }
+
+    private static InfoBarSeverity MapSeverity(LaunchStatus status)
+        => status == LaunchStatus.TargetMissing ? InfoBarSeverity.Warning : InfoBarSeverity.Error;
 
     private static ScreenRect ToScreenRect(RectInt32 rect)
         => new(rect.X, rect.Y, rect.Width, rect.Height);
