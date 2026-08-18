@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using GroupsOnTaskbar.App.ViewModels;
 using GroupsOnTaskbar.Core.Models;
@@ -19,6 +20,7 @@ public sealed partial class SettingsWindow : Window
     private static extern uint GetDpiForWindow(IntPtr hWnd);
 
     private bool _isSaving;
+    private bool _isSyncingSelection;
 
     public SettingsWindow(SettingsViewModel viewModel)
     {
@@ -27,6 +29,16 @@ public sealed partial class SettingsWindow : Window
 
         Title = "Taskbar Groups Settings";
         ConfigureWindow();
+
+        SettingsRoot.Loaded += OnSettingsRootLoaded;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void OnSettingsRootLoaded(object sender, RoutedEventArgs e)
+    {
+        GroupsListView.ItemsSource = ViewModel.Groups;
+        ShortcutsListView.ItemsSource = ViewModel.Shortcuts;
+        SyncSelectionFromViewModel();
     }
 
     public event EventHandler? CancelRequested;
@@ -58,13 +70,69 @@ public sealed partial class SettingsWindow : Window
         ViewModel.ClearErrorMessage();
     }
 
+    /// <summary>
+    /// Pushes in-flight TextBox text into the view model. Two-way x:Bind updates
+    /// on focus loss, and a button click does not always move focus first.
+    /// </summary>
+    private void CommitPendingTextInput()
+    {
+        ViewModel.GroupNameInput = GroupNameTextBox.Text;
+        ViewModel.ShortcutDisplayNameInput = ShortcutDisplayNameTextBox.Text;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(SettingsViewModel.SelectedGroup)
+            or nameof(SettingsViewModel.SelectedShortcut))
+        {
+            SyncSelectionFromViewModel();
+        }
+    }
+
+    private void SyncSelectionFromViewModel()
+    {
+        _isSyncingSelection = true;
+
+        try
+        {
+            GroupsListView.SelectedItem = ViewModel.SelectedGroup;
+            ShortcutsListView.SelectedItem = ViewModel.SelectedShortcut;
+        }
+        finally
+        {
+            _isSyncingSelection = false;
+        }
+    }
+
+    private void OnGroupsListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSelection)
+        {
+            return;
+        }
+
+        ViewModel.SelectedGroup = GroupsListView.SelectedItem as SettingsGroupItemViewModel;
+    }
+
+    private void OnShortcutsListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSelection)
+        {
+            return;
+        }
+
+        ViewModel.SelectedShortcut = ShortcutsListView.SelectedItem as SettingsShortcutItemViewModel;
+    }
+
     private void OnAddGroupButtonClick(object sender, RoutedEventArgs e)
     {
+        CommitPendingTextInput();
         ViewModel.AddGroup();
     }
 
     private void OnRenameGroupButtonClick(object sender, RoutedEventArgs e)
     {
+        CommitPendingTextInput();
         ViewModel.ApplyGroupName();
     }
 
@@ -101,6 +169,7 @@ public sealed partial class SettingsWindow : Window
 
     private void OnRenameShortcutButtonClick(object sender, RoutedEventArgs e)
     {
+        CommitPendingTextInput();
         ViewModel.ApplyShortcutName();
     }
 
@@ -132,8 +201,9 @@ public sealed partial class SettingsWindow : Window
             var savedConfiguration = await ViewModel.SaveAsync();
             SaveCompleted?.Invoke(this, new SettingsSavedEventArgs(savedConfiguration));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            ViewModel.SetErrorMessage($"Settings could not be saved. {exception.Message}");
         }
         finally
         {

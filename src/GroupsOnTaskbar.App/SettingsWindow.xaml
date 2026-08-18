@@ -11,238 +11,316 @@
         <MicaBackdrop Kind="BaseAlt" />
     </Window.SystemBackdrop>
 
-    <Grid Padding="16" RowSpacing="12">
+    <Grid
+        x:Name="SettingsRoot"
+        Padding="24,16,24,16"
+        RowSpacing="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <TextBlock
+            Grid.Row="0"
+            Style="{ThemeResource TitleTextBlockStyle}"
+            Text="Taskbar Groups settings" />
+
         <InfoBar
             x:Name="ErrorInfoBar"
-            Grid.Row="0"
-            IsClosable="True"
-            IsOpen="{x:Bind ViewModel.HasErrorMessage, Mode=OneWay}"
-            Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-            Severity="Error"
+            Grid.Row="1"
             Title="Settings issue"
             AutomationProperties.AutomationId="SettingsErrorInfoBar"
             AutomationProperties.Name="Settings validation message"
-            CloseButtonClick="OnErrorInfoBarCloseButtonClick" />
+            CloseButtonClick="OnErrorInfoBarCloseButtonClick"
+            IsClosable="True"
+            IsOpen="{x:Bind ViewModel.HasErrorMessage, Mode=OneWay}"
+            Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+            Severity="Error" />
 
-        <ScrollViewer
-            Grid.Row="1"
-            HorizontalScrollBarVisibility="Disabled"
-            HorizontalScrollMode="Disabled"
-            VerticalScrollBarVisibility="Auto"
-            VerticalScrollMode="Auto">
-            <StackPanel Spacing="16">
-                <Border
-                    Padding="16"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="16">
-                    <StackPanel Spacing="12">
-                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Groups" />
+        <Grid Grid.Row="2" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-                        <ListView
-                            x:Name="GroupsListView"
-                            Height="280"
-                            AutomationProperties.AutomationId="GroupsListView"
-                            AutomationProperties.Name="Launcher groups"
-                            ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}"
-                            SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=TwoWay}"
-                            SelectionMode="Single">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="viewModels:SettingsGroupItemViewModel">
-                                        <TextBlock
-                                            AutomationProperties.Name="{x:Bind AccessibleName}"
-                                            Text="{x:Bind Name}"
-                                            TextWrapping="WrapWholeWords" />
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+            <Border
+                Grid.Column="0"
+                Padding="16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                        <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="Group name" />
+                    <TextBlock
+                        Grid.Row="0"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}"
+                        Text="Groups" />
 
-                        <TextBox
-                            x:Name="GroupNameTextBox"
-                            AutomationProperties.AutomationId="GroupNameTextBox"
-                            AutomationProperties.Name="Group name"
-                            Text="{x:Bind ViewModel.GroupNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <ListView
+                        x:Name="GroupsListView"
+                        Grid.Row="1"
+                        AutomationProperties.AutomationId="GroupsListView"
+                        AutomationProperties.Name="Launcher groups"
+                        SelectionChanged="OnGroupsListViewSelectionChanged"
+                        SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:SettingsGroupItemViewModel">
+                                <TextBlock
+                                    AutomationProperties.Name="{x:Bind AccessibleName}"
+                                    Text="{x:Bind Name}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
 
-                        <StackPanel Spacing="8">
-                            <Button
-                                AutomationProperties.AutomationId="AddGroupButton"
-                                AutomationProperties.Name="Add group"
-                                ToolTipService.ToolTip="Add group"
-                                Click="OnAddGroupButtonClick"
-                                Content="Add group" />
+                    <TextBox
+                        x:Name="GroupNameTextBox"
+                        Grid.Row="2"
+                        AutomationProperties.AutomationId="GroupNameTextBox"
+                        AutomationProperties.Name="Group name"
+                        Header="Group name"
+                        PlaceholderText="For example: Work"
+                        Text="{x:Bind ViewModel.GroupNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                            <Button
-                                AutomationProperties.AutomationId="RenameGroupButton"
-                                AutomationProperties.Name="Apply group name"
-                                ToolTipService.ToolTip="Apply group name"
-                                Click="OnRenameGroupButtonClick"
-                                Content="Apply name"
-                                IsEnabled="{x:Bind ViewModel.CanApplyGroupName, Mode=OneWay}" />
+                    <StackPanel
+                        Grid.Row="3"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            AutomationProperties.AutomationId="AddGroupButton"
+                            AutomationProperties.Name="Add group"
+                            Click="OnAddGroupButtonClick"
+                            Style="{StaticResource AccentButtonStyle}"
+                            ToolTipService.ToolTip="Add a group using the name above">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon FontSize="14" Glyph="&#xE710;" />
+                                <TextBlock Text="Add" />
+                            </StackPanel>
+                        </Button>
 
-                            <Button
-                                AutomationProperties.AutomationId="DeleteGroupButton"
-                                AutomationProperties.Name="Delete selected group"
-                                ToolTipService.ToolTip="Delete selected group"
-                                Click="OnDeleteGroupButtonClick"
-                                Content="Delete group"
-                                IsEnabled="{x:Bind ViewModel.CanDeleteGroup, Mode=OneWay}" />
+                        <Button
+                            AutomationProperties.AutomationId="RenameGroupButton"
+                            AutomationProperties.Name="Apply group name"
+                            Click="OnRenameGroupButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanApplyGroupName, Mode=OneWay}"
+                            ToolTipService.ToolTip="Rename the selected group">
+                            <FontIcon FontSize="14" Glyph="&#xE8AC;" />
+                        </Button>
 
-                            <Button
-                                AutomationProperties.AutomationId="MoveGroupUpButton"
-                                AutomationProperties.Name="Move selected group up"
-                                ToolTipService.ToolTip="Move selected group up"
-                                Click="OnMoveGroupUpButtonClick"
-                                Content="Move up"
-                                IsEnabled="{x:Bind ViewModel.CanMoveGroupUp, Mode=OneWay}" />
-                        </StackPanel>
+                        <Button
+                            AutomationProperties.AutomationId="DeleteGroupButton"
+                            AutomationProperties.Name="Delete selected group"
+                            Click="OnDeleteGroupButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanDeleteGroup, Mode=OneWay}"
+                            ToolTipService.ToolTip="Delete the selected group">
+                            <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                        </Button>
+
+                        <Button
+                            AutomationProperties.AutomationId="MoveGroupUpButton"
+                            AutomationProperties.Name="Move selected group up"
+                            Click="OnMoveGroupUpButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanMoveGroupUp, Mode=OneWay}"
+                            ToolTipService.ToolTip="Move the selected group up">
+                            <FontIcon FontSize="14" Glyph="&#xE70E;" />
+                        </Button>
 
                         <Button
                             AutomationProperties.AutomationId="MoveGroupDownButton"
                             AutomationProperties.Name="Move selected group down"
-                            ToolTipService.ToolTip="Move selected group down"
                             Click="OnMoveGroupDownButtonClick"
-                            Content="Move down"
-                            IsEnabled="{x:Bind ViewModel.CanMoveGroupDown, Mode=OneWay}" />
+                            IsEnabled="{x:Bind ViewModel.CanMoveGroupDown, Mode=OneWay}"
+                            ToolTipService.ToolTip="Move the selected group down">
+                            <FontIcon FontSize="14" Glyph="&#xE70D;" />
+                        </Button>
                     </StackPanel>
-                </Border>
+                </Grid>
+            </Border>
 
-                <Border
-                    Padding="16"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="16">
-                    <StackPanel Spacing="12">
-                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Shortcuts" />
+            <Border
+                Grid.Column="1"
+                Padding="16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
+                    <TextBlock
+                        Grid.Row="0"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}"
+                        Text="Apps in this group" />
+
+                    <Grid Grid.Row="1">
                         <ListView
                             x:Name="ShortcutsListView"
-                            Height="280"
                             AutomationProperties.AutomationId="ShortcutsListView"
                             AutomationProperties.Name="Group shortcuts"
-                            ItemsSource="{x:Bind ViewModel.Shortcuts, Mode=OneWay}"
-                            SelectedItem="{x:Bind ViewModel.SelectedShortcut, Mode=TwoWay}"
+                            SelectionChanged="OnShortcutsListViewSelectionChanged"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="viewModels:SettingsShortcutItemViewModel">
+                                    <StackPanel
+                                        AutomationProperties.HelpText="{x:Bind TargetPathHelpText}"
+                                        AutomationProperties.Name="{x:Bind AccessibleName}"
+                                        Spacing="2">
+                                        <TextBlock
+                                            Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                            Text="{x:Bind DisplayName}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            Text="{x:Bind TargetPath}"
+                                            TextTrimming="CharacterEllipsis" />
                                         <StackPanel
+                                            Orientation="Horizontal"
                                             Spacing="4"
-                                            AutomationProperties.Name="{x:Bind AccessibleName}"
-                                            AutomationProperties.HelpText="{x:Bind TargetPathHelpText}">
-                                            <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="{x:Bind DisplayName}" TextWrapping="WrapWholeWords" />
+                                            Visibility="{x:Bind AvailabilityVisibility}">
+                                            <FontIcon
+                                                AutomationProperties.AccessibilityView="Raw"
+                                                FontSize="12"
+                                                Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                Glyph="&#xE7BA;" />
                                             <TextBlock
-                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                                 Style="{ThemeResource CaptionTextBlockStyle}"
-                                                Text="{x:Bind TargetPath}"
-                                                TextWrapping="WrapWholeWords" />
-                                            <StackPanel
-                                                Orientation="Horizontal"
-                                                Spacing="4"
-                                                Visibility="{x:Bind AvailabilityVisibility}">
-                                                <SymbolIcon
-                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                    Symbol="Important"
-                                                    AutomationProperties.AccessibilityView="Raw" />
-                                                <TextBlock
-                                                    Style="{ThemeResource CaptionTextBlockStyle}"
-                                                    Text="{x:Bind AvailabilityText}"
-                                                    TextWrapping="WrapWholeWords" />
-                                            </StackPanel>
+                                                Text="{x:Bind AvailabilityText}" />
                                         </StackPanel>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
 
-                        <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="Display name" />
-
-                        <TextBox
-                            x:Name="ShortcutDisplayNameTextBox"
-                            AutomationProperties.AutomationId="ShortcutDisplayNameTextBox"
-                            AutomationProperties.Name="Shortcut display name"
-                            Text="{x:Bind ViewModel.ShortcutDisplayNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="Target path" />
-
-                        <TextBlock
-                            AutomationProperties.AutomationId="SelectedShortcutTargetPath"
-                            AutomationProperties.Name="Selected shortcut target path"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="{x:Bind ViewModel.SelectedShortcutTargetPath, Mode=OneWay}"
-                            TextWrapping="WrapWholeWords" />
-
-                        <StackPanel Spacing="8">
-                            <Button
-                                AutomationProperties.AutomationId="AddShortcutButton"
-                                AutomationProperties.Name="Add app to selected group"
-                                ToolTipService.ToolTip="Add app to selected group"
-                                Click="OnAddShortcutButtonClick"
-                                Content="Add app"
-                                IsEnabled="{x:Bind ViewModel.CanAddShortcut, Mode=OneWay}" />
-
-                            <Button
-                                AutomationProperties.AutomationId="RenameShortcutButton"
-                                AutomationProperties.Name="Apply shortcut display name"
-                                ToolTipService.ToolTip="Apply shortcut display name"
-                                Click="OnRenameShortcutButtonClick"
-                                Content="Apply name"
-                                IsEnabled="{x:Bind ViewModel.CanApplyShortcutName, Mode=OneWay}" />
-
-                            <Button
-                                AutomationProperties.AutomationId="DeleteShortcutButton"
-                                AutomationProperties.Name="Remove selected app"
-                                ToolTipService.ToolTip="Remove selected app"
-                                Click="OnDeleteShortcutButtonClick"
-                                Content="Remove"
-                                IsEnabled="{x:Bind ViewModel.CanDeleteShortcut, Mode=OneWay}" />
-
-                            <Button
-                                AutomationProperties.AutomationId="MoveShortcutUpButton"
-                                AutomationProperties.Name="Move selected app up"
-                                ToolTipService.ToolTip="Move selected app up"
-                                Click="OnMoveShortcutUpButtonClick"
-                                Content="Move up"
-                                IsEnabled="{x:Bind ViewModel.CanMoveShortcutUp, Mode=OneWay}" />
-
-                            <Button
-                                AutomationProperties.AutomationId="MoveShortcutDownButton"
-                                AutomationProperties.Name="Move selected app down"
-                                ToolTipService.ToolTip="Move selected app down"
-                                Click="OnMoveShortcutDownButtonClick"
-                                Content="Move down"
-                                IsEnabled="{x:Bind ViewModel.CanMoveShortcutDown, Mode=OneWay}" />
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Spacing="6"
+                            Visibility="{x:Bind ViewModel.ShortcutsEmptyStateVisibility, Mode=OneWay}">
+                            <FontIcon
+                                FontSize="24"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE8B7;" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                Text="Select a group, then choose Add app." />
                         </StackPanel>
+                    </Grid>
+
+                    <TextBox
+                        x:Name="ShortcutDisplayNameTextBox"
+                        Grid.Row="2"
+                        AutomationProperties.AutomationId="ShortcutDisplayNameTextBox"
+                        AutomationProperties.Name="Shortcut display name"
+                        Header="Display name"
+                        PlaceholderText="Shown under the app icon"
+                        Text="{x:Bind ViewModel.ShortcutDisplayNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock
+                        Grid.Row="3"
+                        AutomationProperties.AutomationId="SelectedShortcutTargetPath"
+                        AutomationProperties.Name="Selected shortcut target path"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Text="{x:Bind ViewModel.SelectedShortcutTargetPath, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <StackPanel
+                        Grid.Row="4"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            AutomationProperties.AutomationId="AddShortcutButton"
+                            AutomationProperties.Name="Add app to selected group"
+                            Click="OnAddShortcutButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanAddShortcut, Mode=OneWay}"
+                            Style="{StaticResource AccentButtonStyle}"
+                            ToolTipService.ToolTip="Pick an .exe or .lnk to add">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon FontSize="14" Glyph="&#xE710;" />
+                                <TextBlock Text="Add app" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button
+                            AutomationProperties.AutomationId="RenameShortcutButton"
+                            AutomationProperties.Name="Apply shortcut display name"
+                            Click="OnRenameShortcutButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanApplyShortcutName, Mode=OneWay}"
+                            ToolTipService.ToolTip="Rename the selected app">
+                            <FontIcon FontSize="14" Glyph="&#xE8AC;" />
+                        </Button>
+
+                        <Button
+                            AutomationProperties.AutomationId="DeleteShortcutButton"
+                            AutomationProperties.Name="Remove selected app"
+                            Click="OnDeleteShortcutButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanDeleteShortcut, Mode=OneWay}"
+                            ToolTipService.ToolTip="Remove the selected app">
+                            <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                        </Button>
+
+                        <Button
+                            AutomationProperties.AutomationId="MoveShortcutUpButton"
+                            AutomationProperties.Name="Move selected app up"
+                            Click="OnMoveShortcutUpButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanMoveShortcutUp, Mode=OneWay}"
+                            ToolTipService.ToolTip="Move the selected app up">
+                            <FontIcon FontSize="14" Glyph="&#xE70E;" />
+                        </Button>
+
+                        <Button
+                            AutomationProperties.AutomationId="MoveShortcutDownButton"
+                            AutomationProperties.Name="Move selected app down"
+                            Click="OnMoveShortcutDownButtonClick"
+                            IsEnabled="{x:Bind ViewModel.CanMoveShortcutDown, Mode=OneWay}"
+                            ToolTipService.ToolTip="Move the selected app down">
+                            <FontIcon FontSize="14" Glyph="&#xE70D;" />
+                        </Button>
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
         <StackPanel
-            Grid.Row="2"
+            Grid.Row="3"
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
             <Button
+                MinWidth="96"
                 AutomationProperties.AutomationId="SaveSettingsButton"
                 AutomationProperties.Name="Save settings"
-                ToolTipService.ToolTip="Save settings"
                 Click="OnSaveButtonClick"
                 Content="Save"
-                Style="{StaticResource AccentButtonStyle}" />
+                Style="{StaticResource AccentButtonStyle}"
+                ToolTipService.ToolTip="Save settings" />
             <Button
+                MinWidth="96"
                 AutomationProperties.AutomationId="CancelSettingsButton"
                 AutomationProperties.Name="Cancel settings changes"
-                ToolTipService.ToolTip="Cancel settings changes"
                 Click="OnCancelButtonClick"
-                Content="Cancel" />
+                Content="Cancel"
+                ToolTipService.ToolTip="Discard changes" />
         </StackPanel>
     </Grid>
 </Window>

@@ -105,6 +105,9 @@ public sealed class SettingsViewModel : ObservableObject
 
     public bool CanMoveShortcutDown => SelectedShortcut is not null && SelectedShortcut.SortOrder < Shortcuts.Count - 1;
 
+    public Visibility ShortcutsEmptyStateVisibility =>
+        Shortcuts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
     public void AddGroup()
     {
         var addedGroupId = _session.AddGroup(GroupNameInput);
@@ -266,6 +269,11 @@ public sealed class SettingsViewModel : ObservableObject
         ErrorMessage = null;
     }
 
+    public void SetErrorMessage(string message)
+    {
+        ErrorMessage = message;
+    }
+
     private void ReloadFromSession(Guid? preferredGroupId = null, Guid? preferredShortcutId = null)
     {
         var snapshot = _session.Snapshot;
@@ -341,6 +349,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(CanDeleteShortcut));
         OnPropertyChanged(nameof(CanMoveShortcutUp));
         OnPropertyChanged(nameof(CanMoveShortcutDown));
+        OnPropertyChanged(nameof(ShortcutsEmptyStateVisibility));
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> collection, IEnumerable<T> items)

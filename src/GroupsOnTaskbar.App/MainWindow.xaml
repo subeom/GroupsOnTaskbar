@@ -55,12 +55,11 @@
                         Margin="0,0,0,4"
                         AutomationProperties.AutomationId="GroupSelector"
                         AutomationProperties.Name="Application groups"
-                        ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}"
                         ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                         ScrollViewer.HorizontalScrollMode="Enabled"
                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollMode="Disabled"
-                        SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=TwoWay}"
+                        SelectionChanged="OnGroupListViewSelectionChanged"
                         SelectionMode="Single">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -102,7 +101,6 @@
                             AutomationProperties.Name="Applications in the selected group"
                             IsItemClickEnabled="True"
                             ItemClick="OnShortcutGridViewItemClick"
-                            ItemsSource="{x:Bind ViewModel.VisibleShortcuts, Mode=OneWay}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectionMode="None"
@@ -193,7 +191,7 @@
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                     MaxWidth="260"
                                     Style="{ThemeResource BodyTextBlockStyle}"
-                                    Text="Select another group or add shortcuts in Settings once editing is available."
+                                    Text="Open Settings to add apps to this group."
                                     TextAlignment="Center"
                                     TextWrapping="WrapWholeWords" />
                             </StackPanel>
