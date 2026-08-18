@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using GroupsOnTaskbar.Core.Launch;
 
 namespace GroupsOnTaskbar.App.Services;
 

@@ -1,8 +1,7 @@
 using System.ComponentModel;
-using GroupsOnTaskbar.Core.Launch;
 using GroupsOnTaskbar.Core.Validation;
 
-namespace GroupsOnTaskbar.App.Services;
+namespace GroupsOnTaskbar.Core.Launch;
 
 public sealed class ShellAppLaunchService(
     IShellExecutor shellExecutor,

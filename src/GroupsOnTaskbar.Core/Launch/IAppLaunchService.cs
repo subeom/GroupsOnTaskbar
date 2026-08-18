@@ -1,6 +1,4 @@
-using GroupsOnTaskbar.Core.Launch;
-
-namespace GroupsOnTaskbar.App.Services;
+namespace GroupsOnTaskbar.Core.Launch;
 
 public interface IAppLaunchService
 {

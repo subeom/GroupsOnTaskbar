@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using GroupsOnTaskbar.App.Services;
 using GroupsOnTaskbar.Core.Launch;
 
 namespace GroupsOnTaskbar.Tests;

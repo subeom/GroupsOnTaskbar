@@ -1,4 +1,4 @@
-namespace GroupsOnTaskbar.App.Services;
+namespace GroupsOnTaskbar.Core.Launch;
 
 public interface IShellExecutor
 {
