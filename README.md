@@ -73,6 +73,25 @@ After the package is installed:
 
 The pinned taskbar icon is the single MVP entry point for launching your configured groups.
 
+## Known issues
+
+The MVP installs, launches, saves settings, and survives being hidden, but two
+problems remain open:
+
+- **Group and shortcut lists do not render their items.** Groups are created,
+  selected, and written to `settings-v1.json` correctly, and the Add app button
+  enables as expected, but neither `ListView` draws its rows. The bindings were
+  moved from `x:Bind` to code-behind `ItemsSource` assignment in the `Loaded`
+  handler; that did not resolve it, so the cause is still unknown.
+- **The launcher can be hard to bring back on screen.** The flyout correctly
+  hides when it loses focus, but repeated taskbar activations do not always
+  re-show it. Reworking the first-launch path caused a `0x80004003` crash in
+  `combase.dll`, so that change was reverted; the toggle path needs a different
+  fix.
+
+Both issues are visual/interaction only. Configuration validation, persistence,
+recovery, placement math, and launching are covered by 70 passing unit tests.
+
 ## Verifying a build
 
 Automated checks run anywhere:
