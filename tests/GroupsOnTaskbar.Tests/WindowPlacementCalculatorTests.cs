@@ -140,6 +140,33 @@ public sealed class WindowPlacementCalculatorTests
                 gap));
     }
 
+    [Theory]
+    [InlineData(560, 460, 8)]
+    [InlineData(840, 690, 12)]
+    [InlineData(1120, 920, 16)]
+    public void Calculate_WithRuntimeLauncherFootprint_KeepsPlacementInsideWorkArea(
+        int windowWidth,
+        int windowHeight,
+        int gap)
+    {
+        var monitor = new ScreenRect(0, 0, 3840, 2160);
+        var workArea = new ScreenRect(0, 0, 3840, 2080);
+
+        var placement = WindowPlacementCalculator.Calculate(
+            monitor,
+            workArea,
+            3830,
+            2150,
+            windowWidth,
+            windowHeight,
+            gap);
+
+        Assert.Equal(windowWidth, placement.Width);
+        Assert.Equal(windowHeight, placement.Height);
+        Assert.Equal(workArea.Bottom - windowHeight - gap, placement.Y);
+        AssertInside(workArea, placement);
+    }
+
     private static void AssertInside(ScreenRect bounds, ScreenRect placement)
     {
         Assert.InRange(placement.X, bounds.X, bounds.Right - placement.Width);

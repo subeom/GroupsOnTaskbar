@@ -155,7 +155,9 @@ public partial class App : Application
                     await _logger.WriteAsync(nameof(App), exception);
                 }
 
-                configuration = LauncherConfiguration.Empty;
+                await ShowStartupLoadFailureDialogAsync(exception);
+                Application.Current.Exit();
+                return false;
             }
         }
 
@@ -222,5 +224,53 @@ public partial class App : Application
         return result == ContentDialogResult.Primary
             ? await recovery.BackUpAndResetAsync()
             : recovery.Exit();
+    }
+
+    private async Task ShowStartupLoadFailureDialogAsync(Exception exception)
+    {
+        if (_mainWindow is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _mainWindow.AppWindow.Show();
+            _mainWindow.Activate();
+
+            var dialog = new ContentDialog
+            {
+                Title = "Settings could not be opened",
+                CloseButtonText = "Exit",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = _mainWindow.RootHost.XamlRoot,
+                Content = new StackPanel
+                {
+                    Spacing = 8,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "Taskbar Groups could not open its settings file, so it stopped instead of replacing your saved groups. Check that the file is accessible and start the app again.",
+                            TextWrapping = TextWrapping.WrapWholeWords
+                        },
+                        new TextBlock
+                        {
+                            Text = exception.Message,
+                            TextWrapping = TextWrapping.WrapWholeWords
+                        }
+                    }
+                }
+            };
+
+            await dialog.ShowAsync();
+        }
+        catch (Exception dialogException)
+        {
+            if (_logger is not null)
+            {
+                await _logger.WriteAsync(nameof(App), dialogException);
+            }
+        }
     }
 }

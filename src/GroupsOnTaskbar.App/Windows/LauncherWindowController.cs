@@ -15,7 +15,7 @@ public sealed class LauncherWindowController
 {
     private const int LogicalWindowWidth = 560;
     private const int LogicalWindowHeight = 460;
-    private const int LauncherGap = 8;
+    private const int LogicalLauncherGap = 8;
 
     private readonly MainWindow _window;
     private readonly AppWindow _appWindow;
@@ -99,6 +99,7 @@ public sealed class LauncherWindowController
         var scale = _rootHost.XamlRoot?.RasterizationScale ?? 1.0;
         var windowWidth = Math.Max(1, (int)Math.Round(LogicalWindowWidth * scale, MidpointRounding.AwayFromZero));
         var windowHeight = Math.Max(1, (int)Math.Round(LogicalWindowHeight * scale, MidpointRounding.AwayFromZero));
+        var gap = Math.Max(0, (int)Math.Round(LogicalLauncherGap * scale, MidpointRounding.AwayFromZero));
         var placement = WindowPlacementCalculator.Calculate(
             monitor,
             workArea,
@@ -106,7 +107,7 @@ public sealed class LauncherWindowController
             cursor.Y,
             windowWidth,
             windowHeight,
-            LauncherGap);
+            gap);
 
         _appWindow.MoveAndResize(new RectInt32(placement.X, placement.Y, placement.Width, placement.Height));
         _appWindow.Show();
