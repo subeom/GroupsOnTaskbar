@@ -15,7 +15,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\GroupsOnTaskbar.App\GroupsOnTaskbar.App.csproj" />
     <ProjectReference Include="..\..\src\GroupsOnTaskbar.Core\GroupsOnTaskbar.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\GroupsOnTaskbar.App\Services\IAppLaunchService.cs" Link="AppServices\IAppLaunchService.cs" />
+    <Compile Include="..\..\src\GroupsOnTaskbar.App\Services\IShellExecutor.cs" Link="AppServices\IShellExecutor.cs" />
+    <Compile Include="..\..\src\GroupsOnTaskbar.App\Services\ShellAppLaunchService.cs" Link="AppServices\ShellAppLaunchService.cs" />
   </ItemGroup>
 </Project>
