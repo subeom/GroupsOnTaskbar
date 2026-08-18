@@ -1552,7 +1552,7 @@ presenter.IsAlwaysOnTop = true;
 _window.AppWindow.IsShownInSwitchers = false;
 ```
 
-Use a logical target size of 440 by 360 and convert it with the root
+Use a logical target size of 560 by 460 and convert it with the root
 `XamlRoot.RasterizationScale` before placement. `ToggleAtCursor` hides a
 visible window; otherwise it moves, shows, and activates it.
 
