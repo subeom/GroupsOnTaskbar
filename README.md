@@ -6,7 +6,8 @@ Taskbar Groups is a packaged WinUI 3 launcher for Windows 11. It gives you one t
 
 - Windows 11
 - .NET 10 SDK
-- Windows Developer Mode enabled
+- Windows Developer Mode enabled (Settings → System → For developers). Enabling it requires administrator rights.
+- Administrator rights once, to trust the local development signing certificate before installing the MSIX
 
 Install the WinUI project templates if they are not already available:
 
@@ -40,8 +41,20 @@ The script:
 - reuses or creates a code-signing certificate in `CurrentUser\My` with subject `CN=Taskbar Groups Development`
 - exports only the public certificate to `.\artifacts\package\TaskbarGroupsDevelopment.cer`
 - imports that public certificate into `CurrentUser\TrustedPeople` and `CurrentUser\Root`
+- imports it into `LocalMachine\TrustedPeople` when run elevated, and otherwise prints the elevated command you still need to run
 - publishes the WinUI app as a signed x64 MSIX
 - copies the newest package to `.\artifacts\package\TaskbarGroups_0.1.0.0_x64.msix`
+
+Windows validates MSIX signatures against machine-scoped trust. If the script reported
+that the certificate is not trusted for the local machine, run this once from an
+elevated PowerShell prompt:
+
+```powershell
+Import-Certificate -FilePath .\artifacts\package\TaskbarGroupsDevelopment.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+```
+
+Skipping this step makes installation fail with `0x800B0109`
+("The root certificate of the signature in the app package or bundle must be trusted").
 
 Install the generated package for the current user:
 

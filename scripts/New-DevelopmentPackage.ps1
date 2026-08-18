@@ -68,12 +68,14 @@ function Ensure-CertificateInStore {
         [System.Security.Cryptography.X509Certificates.StoreName] $StoreName,
 
         [Parameter(Mandatory = $true)]
-        [System.Security.Cryptography.X509Certificates.X509Certificate2] $Certificate
+        [System.Security.Cryptography.X509Certificates.X509Certificate2] $Certificate,
+
+        [System.Security.Cryptography.X509Certificates.StoreLocation] $StoreLocation = [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser
     )
 
     $store = [System.Security.Cryptography.X509Certificates.X509Store]::new(
         $StoreName,
-        [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
+        $StoreLocation)
 
     try {
         $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
@@ -89,6 +91,43 @@ function Ensure-CertificateInStore {
     finally {
         $store.Close()
     }
+}
+
+function Test-CertificateInStore {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Security.Cryptography.X509Certificates.StoreName] $StoreName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Thumbprint,
+
+        [Parameter(Mandatory = $true)]
+        [System.Security.Cryptography.X509Certificates.StoreLocation] $StoreLocation
+    )
+
+    $store = [System.Security.Cryptography.X509Certificates.X509Store]::new(
+        $StoreName,
+        $StoreLocation)
+
+    try {
+        $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
+        return $store.Certificates.Find(
+            [System.Security.Cryptography.X509Certificates.X509FindType]::FindByThumbprint,
+            $Thumbprint,
+            $false).Count -gt 0
+    }
+    catch {
+        return $false
+    }
+    finally {
+        $store.Close()
+    }
+}
+
+function Test-IsAdministrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    return ([Security.Principal.WindowsPrincipal]$identity).IsInRole(
+        [Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
@@ -127,6 +166,30 @@ Export-Certificate -Cert $certificate -FilePath $cerPath -Force | Out-Null
 $publicCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($cerPath)
 Ensure-CertificateInStore -StoreName ([System.Security.Cryptography.X509Certificates.StoreName]::TrustedPeople) -Certificate $publicCertificate
 Ensure-CertificateInStore -StoreName ([System.Security.Cryptography.X509Certificates.StoreName]::Root) -Certificate $publicCertificate
+
+# Windows validates MSIX signatures against machine-scoped trust, so CurrentUser
+# trust alone is not enough for Add-AppxPackage to succeed.
+$machineTrusted = Test-CertificateInStore `
+    -StoreName ([System.Security.Cryptography.X509Certificates.StoreName]::TrustedPeople) `
+    -Thumbprint $certificate.Thumbprint `
+    -StoreLocation ([System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine)
+
+if (-not $machineTrusted) {
+    if (Test-IsAdministrator) {
+        Ensure-CertificateInStore `
+            -StoreName ([System.Security.Cryptography.X509Certificates.StoreName]::TrustedPeople) `
+            -Certificate $publicCertificate `
+            -StoreLocation ([System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine)
+        $machineTrusted = $true
+    }
+    else {
+        Write-Warning @"
+The signing certificate is not trusted for the local machine, so installation will fail with 0x800B0109.
+Run this command once from an elevated PowerShell prompt:
+    Import-Certificate -FilePath '$cerPath' -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+"@
+    }
+}
 
 & dotnet publish $project `
     -c Release `
