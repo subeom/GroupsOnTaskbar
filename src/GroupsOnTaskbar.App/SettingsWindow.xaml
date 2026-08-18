@@ -32,18 +32,12 @@
 
         <ScrollViewer
             Grid.Row="1"
-            HorizontalScrollBarVisibility="Auto"
-            HorizontalScrollMode="Auto"
+            HorizontalScrollBarVisibility="Disabled"
+            HorizontalScrollMode="Disabled"
             VerticalScrollBarVisibility="Auto"
             VerticalScrollMode="Auto">
-            <Grid MinWidth="920" ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="320" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
+            <StackPanel Spacing="16">
                 <Border
-                    Grid.Column="0"
                     Padding="16"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -62,7 +56,10 @@
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="viewModels:SettingsGroupItemViewModel">
-                                    <TextBlock Text="{x:Bind Name}" TextWrapping="WrapWholeWords" />
+                                        <TextBlock
+                                            AutomationProperties.Name="{x:Bind AccessibleName}"
+                                            Text="{x:Bind Name}"
+                                            TextWrapping="WrapWholeWords" />
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
@@ -75,55 +72,43 @@
                             AutomationProperties.Name="Group name"
                             Text="{x:Bind ViewModel.GroupNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                        <Grid ColumnSpacing="8" RowSpacing="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
+                        <StackPanel Spacing="8">
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="0"
                                 AutomationProperties.AutomationId="AddGroupButton"
                                 AutomationProperties.Name="Add group"
+                                ToolTipService.ToolTip="Add group"
                                 Click="OnAddGroupButtonClick"
                                 Content="Add group" />
 
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="1"
                                 AutomationProperties.AutomationId="RenameGroupButton"
                                 AutomationProperties.Name="Apply group name"
+                                ToolTipService.ToolTip="Apply group name"
                                 Click="OnRenameGroupButtonClick"
                                 Content="Apply name"
                                 IsEnabled="{x:Bind ViewModel.CanApplyGroupName, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="1"
-                                Grid.Column="0"
                                 AutomationProperties.AutomationId="DeleteGroupButton"
                                 AutomationProperties.Name="Delete selected group"
+                                ToolTipService.ToolTip="Delete selected group"
                                 Click="OnDeleteGroupButtonClick"
                                 Content="Delete group"
                                 IsEnabled="{x:Bind ViewModel.CanDeleteGroup, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="1"
-                                Grid.Column="1"
                                 AutomationProperties.AutomationId="MoveGroupUpButton"
                                 AutomationProperties.Name="Move selected group up"
+                                ToolTipService.ToolTip="Move selected group up"
                                 Click="OnMoveGroupUpButtonClick"
                                 Content="Move up"
                                 IsEnabled="{x:Bind ViewModel.CanMoveGroupUp, Mode=OneWay}" />
-                        </Grid>
+                        </StackPanel>
 
                         <Button
                             AutomationProperties.AutomationId="MoveGroupDownButton"
                             AutomationProperties.Name="Move selected group down"
+                            ToolTipService.ToolTip="Move selected group down"
                             Click="OnMoveGroupDownButtonClick"
                             Content="Move down"
                             IsEnabled="{x:Bind ViewModel.CanMoveGroupDown, Mode=OneWay}" />
@@ -131,7 +116,6 @@
                 </Border>
 
                 <Border
-                    Grid.Column="1"
                     Padding="16"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -150,14 +134,30 @@
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="viewModels:SettingsShortcutItemViewModel">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="{x:Bind DisplayName}" TextWrapping="WrapWholeWords" />
-                                        <TextBlock
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Style="{ThemeResource CaptionTextBlockStyle}"
-                                            Text="{x:Bind TargetPath}"
-                                            TextWrapping="WrapWholeWords" />
-                                    </StackPanel>
+                                        <StackPanel
+                                            Spacing="4"
+                                            AutomationProperties.Name="{x:Bind AccessibleName}"
+                                            AutomationProperties.HelpText="{x:Bind TargetPathHelpText}">
+                                            <TextBlock Style="{ThemeResource BodyStrongTextBlockStyle}" Text="{x:Bind DisplayName}" TextWrapping="WrapWholeWords" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind TargetPath}"
+                                                TextWrapping="WrapWholeWords" />
+                                            <StackPanel
+                                                Orientation="Horizontal"
+                                                Spacing="4"
+                                                Visibility="{x:Bind AvailabilityVisibility}">
+                                                <SymbolIcon
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Symbol="Important"
+                                                    AutomationProperties.AccessibilityView="Raw" />
+                                                <TextBlock
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Text="{x:Bind AvailabilityText}"
+                                                    TextWrapping="WrapWholeWords" />
+                                            </StackPanel>
+                                        </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
@@ -179,65 +179,50 @@
                             Text="{x:Bind ViewModel.SelectedShortcutTargetPath, Mode=OneWay}"
                             TextWrapping="WrapWholeWords" />
 
-                        <Grid ColumnSpacing="8" RowSpacing="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
+                        <StackPanel Spacing="8">
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="0"
                                 AutomationProperties.AutomationId="AddShortcutButton"
                                 AutomationProperties.Name="Add app to selected group"
+                                ToolTipService.ToolTip="Add app to selected group"
                                 Click="OnAddShortcutButtonClick"
                                 Content="Add app"
                                 IsEnabled="{x:Bind ViewModel.CanAddShortcut, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="1"
                                 AutomationProperties.AutomationId="RenameShortcutButton"
                                 AutomationProperties.Name="Apply shortcut display name"
+                                ToolTipService.ToolTip="Apply shortcut display name"
                                 Click="OnRenameShortcutButtonClick"
                                 Content="Apply name"
                                 IsEnabled="{x:Bind ViewModel.CanApplyShortcutName, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="2"
                                 AutomationProperties.AutomationId="DeleteShortcutButton"
                                 AutomationProperties.Name="Remove selected app"
+                                ToolTipService.ToolTip="Remove selected app"
                                 Click="OnDeleteShortcutButtonClick"
                                 Content="Remove"
                                 IsEnabled="{x:Bind ViewModel.CanDeleteShortcut, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="1"
-                                Grid.Column="0"
                                 AutomationProperties.AutomationId="MoveShortcutUpButton"
                                 AutomationProperties.Name="Move selected app up"
+                                ToolTipService.ToolTip="Move selected app up"
                                 Click="OnMoveShortcutUpButtonClick"
                                 Content="Move up"
                                 IsEnabled="{x:Bind ViewModel.CanMoveShortcutUp, Mode=OneWay}" />
 
                             <Button
-                                Grid.Row="1"
-                                Grid.Column="1"
                                 AutomationProperties.AutomationId="MoveShortcutDownButton"
                                 AutomationProperties.Name="Move selected app down"
+                                ToolTipService.ToolTip="Move selected app down"
                                 Click="OnMoveShortcutDownButtonClick"
                                 Content="Move down"
                                 IsEnabled="{x:Bind ViewModel.CanMoveShortcutDown, Mode=OneWay}" />
-                        </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
-            </Grid>
+            </StackPanel>
         </ScrollViewer>
 
         <StackPanel
@@ -248,12 +233,14 @@
             <Button
                 AutomationProperties.AutomationId="SaveSettingsButton"
                 AutomationProperties.Name="Save settings"
+                ToolTipService.ToolTip="Save settings"
                 Click="OnSaveButtonClick"
                 Content="Save"
                 Style="{StaticResource AccentButtonStyle}" />
             <Button
                 AutomationProperties.AutomationId="CancelSettingsButton"
                 AutomationProperties.Name="Cancel settings changes"
+                ToolTipService.ToolTip="Cancel settings changes"
                 Click="OnCancelButtonClick"
                 Content="Cancel" />
         </StackPanel>

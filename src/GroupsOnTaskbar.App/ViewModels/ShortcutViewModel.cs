@@ -23,7 +23,13 @@ public sealed class ShortcutViewModel : ObservableObject
 
     public bool IsAvailable { get; }
 
-    public string AvailabilityText => IsAvailable ? string.Empty : "Unavailable";
+    public string AvailabilityText => IsAvailable ? string.Empty : "Target unavailable";
+
+    public string AccessibleName => IsAvailable
+        ? DisplayName
+        : $"{DisplayName}, target unavailable";
+
+    public string TargetPathHelpText => $"Target path: {TargetPath}";
 
     public ImageSource? Icon
     {
@@ -41,6 +47,8 @@ public sealed class ShortcutViewModel : ObservableObject
     }
 
     public Visibility IconFallbackVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility AvailabilityVisibility => IsAvailable ? Visibility.Collapsed : Visibility.Visible;
 
     public double TileOpacity => IsAvailable ? 1.0 : 0.65;
 }

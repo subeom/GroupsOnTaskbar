@@ -16,4 +16,8 @@ public sealed class GroupViewModel : ObservableObject
     public string Name { get; }
 
     public ObservableCollection<ShortcutViewModel> Shortcuts { get; }
+
+    public string AccessibleName => $"{Name} group";
+
+    public string AccessibleHelpText => $"{Shortcuts.Count} apps";
 }

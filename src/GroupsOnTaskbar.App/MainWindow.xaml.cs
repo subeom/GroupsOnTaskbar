@@ -28,9 +28,6 @@ public sealed partial class MainWindow : Window
     public static Visibility BoolToVisibility(bool value)
         => value ? Visibility.Visible : Visibility.Collapsed;
 
-    public static Visibility StringToVisibility(string? value)
-        => string.IsNullOrWhiteSpace(value) ? Visibility.Collapsed : Visibility.Visible;
-
     public void ShowStatus(string title, string message, InfoBarSeverity severity)
     {
         StatusInfoBar.Title = title;

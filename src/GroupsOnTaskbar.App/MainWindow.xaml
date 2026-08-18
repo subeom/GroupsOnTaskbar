@@ -83,8 +83,8 @@
                                     BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
-                                    AutomationProperties.Name="{x:Bind Name}"
-                                    AutomationProperties.HelpText="Application group">
+                                    AutomationProperties.Name="{x:Bind AccessibleName}"
+                                    AutomationProperties.HelpText="{x:Bind AccessibleHelpText}">
                                     <TextBlock
                                         HorizontalAlignment="Center"
                                         Style="{ThemeResource BodyStrongTextBlockStyle}"
@@ -123,8 +123,9 @@
                                         BorderThickness="1"
                                         CornerRadius="12"
                                         Opacity="{x:Bind TileOpacity, Mode=OneWay}"
-                                        AutomationProperties.Name="{x:Bind DisplayName}"
-                                        AutomationProperties.HelpText="{x:Bind TargetPath}">
+                                        AutomationProperties.Name="{x:Bind AccessibleName}"
+                                        AutomationProperties.HelpText="{x:Bind TargetPathHelpText}"
+                                        ToolTipService.ToolTip="{x:Bind TargetPath}">
                                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                                             <Grid Width="48" Height="48">
                                                 <Image
@@ -146,14 +147,22 @@
                                                 Text="{x:Bind DisplayName}"
                                                 TextAlignment="Center"
                                                 TextWrapping="WrapWholeWords" />
-                                            <TextBlock
+                                            <StackPanel
                                                 HorizontalAlignment="Center"
-                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                Style="{ThemeResource CaptionTextBlockStyle}"
-                                                Text="{x:Bind AvailabilityText}"
-                                                TextAlignment="Center"
-                                                TextWrapping="WrapWholeWords"
-                                                Visibility="{x:Bind local:MainWindow.StringToVisibility(AvailabilityText), Mode=OneWay}" />
+                                                Orientation="Horizontal"
+                                                Spacing="4"
+                                                Visibility="{x:Bind AvailabilityVisibility, Mode=OneWay}">
+                                                <SymbolIcon
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Symbol="Important"
+                                                    AutomationProperties.AccessibilityView="Raw" />
+                                                <TextBlock
+                                                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Text="{x:Bind AvailabilityText}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="WrapWholeWords" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
@@ -203,6 +212,7 @@
                             Grid.Column="1"
                             AutomationProperties.AutomationId="SettingsButton"
                             AutomationProperties.Name="Open settings"
+                            ToolTipService.ToolTip="Open settings"
                             Click="OnSettingsButtonClick">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <SymbolIcon Symbol="Setting" />
@@ -215,6 +225,7 @@
                             Grid.Column="2"
                             AutomationProperties.AutomationId="ExitButton"
                             AutomationProperties.Name="Exit launcher"
+                            ToolTipService.ToolTip="Exit launcher"
                             Click="OnExitButtonClick"
                             Style="{StaticResource AccentButtonStyle}">
                             <StackPanel Orientation="Horizontal" Spacing="8">

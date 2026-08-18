@@ -4,9 +4,11 @@ using GroupsOnTaskbar.App.ViewModels;
 using GroupsOnTaskbar.App.Windows;
 using GroupsOnTaskbar.Core.Configuration;
 using GroupsOnTaskbar.Core.Launch;
+using GroupsOnTaskbar.Core.Logging;
 using GroupsOnTaskbar.Core.Models;
 using GroupsOnTaskbar.Core.Presentation;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Windows.Storage;
 
 namespace GroupsOnTaskbar_App;
@@ -18,6 +20,7 @@ public partial class App : Application
     private SettingsWindowController? _settingsWindowController;
     private LauncherViewModel? _launcherViewModel;
     private IGroupStore? _groupStore;
+    private StartupConfigurationLoader? _startupConfigurationLoader;
     private IAppLogger? _logger;
     private bool _isActivationHandlerRegistered;
     private LauncherConfiguration _currentConfiguration = LauncherConfiguration.Empty;
@@ -40,6 +43,7 @@ public partial class App : Application
             && _launcherWindowController is not null
             && _launcherViewModel is not null
             && _groupStore is not null
+            && _startupConfigurationLoader is not null
             && _logger is not null)
         {
             return Task.CompletedTask;
@@ -48,6 +52,7 @@ public partial class App : Application
         var localFolderPath = ApplicationData.Current.LocalFolder.Path;
         _logger = new LocalFileLogger(localFolderPath);
         _groupStore = new JsonGroupStore(localFolderPath);
+        _startupConfigurationLoader = new StartupConfigurationLoader(_groupStore);
 
         var iconService = new ShortcutIconService(localFolderPath, _logger);
         _launcherViewModel = new LauncherViewModel(iconService);
@@ -64,7 +69,7 @@ public partial class App : Application
             _launcherWindowController,
             _groupStore,
             () => _currentConfiguration,
-            LoadLauncherConfigurationAsync);
+            async configuration => _ = await LoadLauncherConfigurationAsync(configuration));
         _mainWindow.AppWindow.Hide();
 
         return Task.CompletedTask;
@@ -84,22 +89,64 @@ public partial class App : Application
     private async Task ToggleLauncherAsync()
     {
         await EnsureLauncherWindowAsync();
-        await LoadLauncherConfigurationAsync();
+        if (!await LoadLauncherConfigurationAsync())
+        {
+            return;
+        }
+
         _launcherWindowController!.Toggle();
     }
 
-    private async Task LoadLauncherConfigurationAsync(LauncherConfiguration? configuration = null)
+    private async Task<bool> LoadLauncherConfigurationAsync(LauncherConfiguration? configuration = null)
     {
-        if (_groupStore is null || _launcherViewModel is null)
+        if (_launcherViewModel is null || _startupConfigurationLoader is null)
         {
-            return;
+            return false;
         }
 
         if (configuration is null)
         {
             try
             {
-                configuration = await _groupStore.LoadAsync();
+                var loadResult = await _startupConfigurationLoader.LoadAsync();
+                if (loadResult.Status == StartupConfigurationLoadStatus.Loaded)
+                {
+                    configuration = loadResult.Configuration ?? LauncherConfiguration.Empty;
+                }
+                else if (loadResult.Recovery is not null)
+                {
+                    StartupConfigurationRecoveryResult recoveryResult;
+
+                    try
+                    {
+                        recoveryResult = await ShowCorruptSettingsDialogAsync(loadResult.Recovery);
+                    }
+                    catch (Exception exception)
+                    {
+                        if (_logger is not null)
+                        {
+                            await _logger.WriteAsync(nameof(App), exception);
+                        }
+
+                        Application.Current.Exit();
+                        return false;
+                    }
+
+                    if (recoveryResult.Choice == StartupConfigurationRecoveryChoice.Exit)
+                    {
+                        Application.Current.Exit();
+                        return false;
+                    }
+
+                    configuration = recoveryResult.Configuration ?? LauncherConfiguration.Empty;
+
+                    if (_logger is not null)
+                    {
+                        await _logger.WriteAsync(
+                            nameof(App),
+                            $"Backed up corrupt settings to '{recoveryResult.BackupPath}'.");
+                    }
+                }
             }
             catch (Exception exception)
             {
@@ -112,6 +159,7 @@ public partial class App : Application
             }
         }
 
+        configuration ??= LauncherConfiguration.Empty;
         _currentConfiguration = configuration;
         var previousSelectedGroupId = _launcherViewModel.SelectedGroup?.Id;
         var presentation = await Task.Run(
@@ -119,5 +167,60 @@ public partial class App : Application
             CancellationToken.None);
 
         await _launcherViewModel.LoadAsync(presentation);
+        return true;
+    }
+
+    private async Task<StartupConfigurationRecoveryResult> ShowCorruptSettingsDialogAsync(
+        StartupConfigurationRecovery recovery)
+    {
+        ArgumentNullException.ThrowIfNull(recovery);
+
+        if (_mainWindow is null)
+        {
+            return recovery.Exit();
+        }
+
+        _mainWindow.AppWindow.Show();
+        _mainWindow.Activate();
+
+        var reasonsText = string.Join(
+            Environment.NewLine,
+            recovery.Reasons.Select(reason => $"• {reason}"));
+
+        var dialog = new ContentDialog
+        {
+            Title = "Settings file cannot be read",
+            PrimaryButtonText = "Back up and reset",
+            CloseButtonText = "Exit",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = _mainWindow.RootHost.XamlRoot,
+            Content = new StackPanel
+            {
+                Spacing = 8,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Taskbar Groups could not read its settings file. You can back up the unreadable file and start with empty settings, or exit the app.",
+                        TextWrapping = TextWrapping.WrapWholeWords
+                    },
+                    new TextBlock
+                    {
+                        Text = $"Path: {recovery.SettingsPath}",
+                        TextWrapping = TextWrapping.WrapWholeWords
+                    },
+                    new TextBlock
+                    {
+                        Text = reasonsText,
+                        TextWrapping = TextWrapping.WrapWholeWords
+                    }
+                }
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        return result == ContentDialogResult.Primary
+            ? await recovery.BackUpAndResetAsync()
+            : recovery.Exit();
     }
 }

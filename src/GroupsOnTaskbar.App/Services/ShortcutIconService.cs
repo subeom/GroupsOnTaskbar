@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using GroupsOnTaskbar.Core.Logging;
 using GroupsOnTaskbar.Core.Launch;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;

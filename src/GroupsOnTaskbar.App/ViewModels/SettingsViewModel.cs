@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using GroupsOnTaskbar.Core.Configuration;
 using GroupsOnTaskbar.Core.Models;
+using Microsoft.UI.Xaml;
 
 namespace GroupsOnTaskbar.App.ViewModels;
 
@@ -292,7 +293,8 @@ public sealed class SettingsViewModel : ObservableObject
                 shortcut.Id,
                 shortcut.DisplayName,
                 shortcut.TargetPath,
-                shortcut.SortOrder))
+                shortcut.SortOrder,
+                File.Exists(shortcut.TargetPath)))
             ?? [];
 
         ReplaceCollection(Shortcuts, shortcuts);
@@ -359,9 +361,16 @@ public sealed class SettingsGroupItemViewModel(Guid id, string name, int sortOrd
     public string Name { get; } = name;
 
     public int SortOrder { get; } = sortOrder;
+
+    public string AccessibleName => $"{Name} group";
 }
 
-public sealed class SettingsShortcutItemViewModel(Guid id, string displayName, string targetPath, int sortOrder)
+public sealed class SettingsShortcutItemViewModel(
+    Guid id,
+    string displayName,
+    string targetPath,
+    int sortOrder,
+    bool isAvailable)
 {
     public Guid Id { get; } = id;
 
@@ -370,4 +379,16 @@ public sealed class SettingsShortcutItemViewModel(Guid id, string displayName, s
     public string TargetPath { get; } = targetPath;
 
     public int SortOrder { get; } = sortOrder;
+
+    public bool IsAvailable { get; } = isAvailable;
+
+    public string AccessibleName => IsAvailable
+        ? $"{DisplayName} app"
+        : $"{DisplayName} app, target unavailable";
+
+    public string TargetPathHelpText => $"Target path: {TargetPath}";
+
+    public string AvailabilityText => IsAvailable ? string.Empty : "Target unavailable";
+
+    public Visibility AvailabilityVisibility => IsAvailable ? Visibility.Collapsed : Visibility.Visible;
 }
