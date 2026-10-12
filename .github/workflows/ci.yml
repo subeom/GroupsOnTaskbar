@@ -1,0 +1,80 @@
+name: Windows CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Windows x64 build and tests
+    runs-on: windows-2025
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10 x64
+        id: dotnet
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+          architecture: x64
+
+      - name: Prepare SDK and diagnostics
+        env:
+          DOTNET_SDK_VERSION: ${{ steps.dotnet.outputs.dotnet-version }}
+        run: |
+          New-Item -ItemType Directory -Path "$env:RUNNER_TEMP\ci-diagnostics" -Force | Out-Null
+          dotnet new globaljson --sdk-version $env:DOTNET_SDK_VERSION --roll-forward disable
+
+      - name: Restore solution
+        run: >
+          dotnet restore .\GroupsOnTaskbar.sln
+          -p:Configuration=Release -p:Platform=x64
+          "-flp:LogFile=$env:RUNNER_TEMP\ci-diagnostics\restore.log;Verbosity=normal"
+
+      - name: Build solution
+        run: >
+          dotnet build .\GroupsOnTaskbar.sln
+          --configuration Release --no-restore -p:Platform=x64
+          "-flp:LogFile=$env:RUNNER_TEMP\ci-diagnostics\build.log;Verbosity=normal"
+
+      - name: Run unit tests
+        run: >
+          dotnet test .\tests\GroupsOnTaskbar.Tests\GroupsOnTaskbar.Tests.csproj
+          --configuration Release --no-build --no-restore -p:Platform=AnyCPU
+          --logger "trx;LogFileName=tests.trx"
+          --results-directory "$env:RUNNER_TEMP\ci-diagnostics\TestResults"
+          --diag "$env:RUNNER_TEMP\ci-diagnostics\TestResults\vstest.log"
+
+      - name: Upload build and test diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-x64-diagnostics-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}\ci-diagnostics\restore.log
+            ${{ runner.temp }}\ci-diagnostics\build.log
+            ${{ runner.temp }}\ci-diagnostics\TestResults\*.trx
+            ${{ runner.temp }}\ci-diagnostics\TestResults\*.log
+          if-no-files-found: warn
+          retention-days: 7

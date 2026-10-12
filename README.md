@@ -110,16 +110,36 @@ Configuration validation, persistence, corruption recovery, placement math, and
 launch classification are covered by 70 passing unit tests and are unaffected by
 the issues above.
 
-## Verifying a build
+## CI and verification
 
-Automated checks run anywhere:
+[Windows CI](.github/workflows/ci.yml) runs on pull requests targeting `main`,
+pushes to `main`, and manual `workflow_dispatch` runs. It uses the
+`windows-2025` x64 runner and .NET 10 to restore dependencies, build the entire
+solution in Release (including the WinUI app), and then run the existing xUnit
+test project without rebuilding or restoring.
+
+Run the same checks locally on Windows with an x64 .NET 10 SDK:
 
 ```powershell
-dotnet build .\GroupsOnTaskbar.sln -c Release
-dotnet test .\GroupsOnTaskbar.sln -c Release --no-build
+dotnet restore .\GroupsOnTaskbar.sln -p:Configuration=Release -p:Platform=x64
+dotnet build .\GroupsOnTaskbar.sln -c Release --no-restore -p:Platform=x64
+dotnet test .\tests\GroupsOnTaskbar.Tests\GroupsOnTaskbar.Tests.csproj -c Release --no-build --no-restore -p:Platform=AnyCPU
 ```
 
-Interactive checks that need Developer Mode and an installed package are listed
+The solution's x64 configuration maps the app to x64 and Core/Tests to Any CPU.
+The test command explicitly selects Any CPU to reuse the Release output built
+by the solution. The Release app is self-contained to support its enabled
+trimming; Debug builds are unchanged.
+
+CI has a 20-minute job timeout and cancels superseded runs for the same PR or
+branch without cancelling independent branches. It uses a read-only contents
+token and retains only generated restore/build logs, test TRX results, and
+VSTest diagnostic logs for seven days, including after build or test failures.
+
+CI does not sign or publish MSIX packages, create or trust certificates, change
+Developer Mode, or register, install, or launch the app. Passing CI does not
+establish desktop/UI correctness. Interactive checks requiring a human
+Windows 11 desktop, Developer Mode, and a trusted signing certificate remain
 in [docs/manual-acceptance.md](docs/manual-acceptance.md).
 
 ## Configuration and logs
